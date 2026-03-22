@@ -47,6 +47,8 @@ export type WalletStackParamList = {
   SwapBridge: undefined;
   SwapPending: undefined;
   SwapSuccess: undefined;
+  SwapNotificationSuccess: undefined;
+  HomeCryptoDown: undefined;
   Settings: undefined;
   EditWallet: undefined;
   NetworkSelection: undefined;

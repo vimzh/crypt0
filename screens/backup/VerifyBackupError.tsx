@@ -1,0 +1,167 @@
+import { useState } from "react";
+import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+import { BackArrow } from "../../components/BackArrow";
+import type { OnboardingStackParamList } from "../../navigation/types";
+
+type Quiz = {
+  position: number;
+  options: string[];
+  correct: string;
+};
+
+const QUIZZES: Quiz[] = [
+  { position: 3, options: ["vote", "obey", "apple"], correct: "apple" },
+  { position: 9, options: ["eager", "purpose", "other"], correct: "purpose" },
+  { position: 11, options: ["radar", "avoid", "income"], correct: "avoid" },
+];
+
+export const VerifyBackupError = () => {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<OnboardingStackParamList>>();
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+
+  const handleSelect = (position: number, word: string) => {
+    setAnswers((prev) => ({ ...prev, [position]: word }));
+  };
+
+  const allAnswered = QUIZZES.every((q) => answers[q.position] !== undefined);
+  const allCorrect = QUIZZES.every(
+    (q) => answers[q.position] === q.correct
+  );
+
+  return (
+    <View className="flex-1 bg-black">
+      <StatusBar style="light" />
+
+      <SafeAreaView className="flex-1">
+        {/* Navbar */}
+        <View className="h-11 flex-row items-center px-4">
+          <Pressable
+            onPress={() => navigation.goBack()}
+            className="h-11 w-11 items-center justify-center"
+          >
+            <BackArrow size={20} />
+          </Pressable>
+        </View>
+
+        {/* Scrollable content */}
+        <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
+          {/* Header */}
+          <View className="gap-4 mb-6">
+            <Text className="text-white text-lg" style={styles.headingText}>
+              Confirm Backup
+            </Text>
+            <Text className="text-white/60 text-base" style={styles.bodyText}>
+              Complete this quick test to confirm you've saved everything
+              correctly.
+            </Text>
+          </View>
+
+          {/* Quiz sections */}
+          <View className="gap-6">
+            {QUIZZES.map((quiz) => {
+              const selected = answers[quiz.position];
+
+              return (
+                <View key={quiz.position} className="gap-3">
+                  <View style={styles.answerBox}>
+                    <Text
+                      className="text-white text-lg"
+                      style={styles.headingText}
+                    >
+                      {quiz.position}.{selected ? ` ${selected}` : ""}
+                    </Text>
+                  </View>
+
+                  <View className="flex-row gap-4">
+                    {quiz.options.map((word) => (
+                      <Pressable
+                        key={word}
+                        onPress={() => handleSelect(quiz.position, word)}
+                        style={[
+                          styles.chip,
+                          {
+                            borderColor:
+                              selected === word
+                                ? "#804FB0"
+                                : "rgba(255,255,255,0.5)",
+                          },
+                        ]}
+                      >
+                        <Text
+                          className="text-white text-base text-center"
+                          style={styles.bodyText}
+                        >
+                          {word}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </ScrollView>
+
+        {/* Error message + Confirm button */}
+        <View className="px-4 pb-4 pt-2">
+          <Text className="text-center mb-3" style={styles.errorText}>
+            Incorrect, try again.
+          </Text>
+
+          <Pressable
+            onPress={() =>
+              navigation.navigate("BackupCompleted", { type: "manual" })
+            }
+            disabled={!allAnswered || !allCorrect}
+            className="w-full items-center justify-center bg-white p-4"
+            style={{ opacity: allAnswered && allCorrect ? 1 : 0.3 }}
+          >
+            <Text className="text-black text-lg" style={styles.buttonText}>
+              Confirm
+            </Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  headingText: {
+    fontFamily: "IBMPlexMono_500Medium",
+    fontSize: 18,
+  },
+  bodyText: {
+    fontFamily: "IBMPlexMono_400Regular",
+    fontSize: 16,
+  },
+  answerBox: {
+    backgroundColor: "#323232",
+    borderRadius: 4,
+    padding: 16,
+    width: "100%",
+  },
+  chip: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.5)",
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  buttonText: {
+    fontFamily: "IBMPlexMono_500Medium",
+    fontSize: 18,
+  },
+  errorText: {
+    fontFamily: "IBMPlexMono_500Medium",
+    fontSize: 14,
+    color: "#BC3C20",
+  },
+});
